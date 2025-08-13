@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance - University Portal</title>
+    <meta name="description" content="Mark your attendance for university classes">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <h1>Student Attendance</h1>
+            <p>Please enter your university email to mark your attendance.</p>
+        </header>
+        
+        <!-- Session Status Display -->
+        <div id="session-status" class="session-status-card" style="display: none;">
+            <div class="status-indicator"></div>
+            <div class="status-content">
+                <h3 id="session-name">No Active Session</h3>
+                <p id="session-details">Please wait for faculty to start an attendance session.</p>
+            </div>
+        </div>
+
+        <!-- Location Status Display -->
+        <div id="location-status" class="session-status-card" style="display: none;">
+            <div class="status-indicator"></div>
+            <div class="status-content">
+                <h3 id="location-name">Checking Location...</h3>
+                <p id="location-details">Please allow location access to mark attendance.</p>
+            </div>
+        </div>
+        
+        <form id="attendance-form" class="attendance-form">
+            <div class="form-group">
+                <label for="email">University Email</label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="e.g., your.name@university.edu"
+                       class="form-input">
+            </div>
+            
+            <button type="submit" id="submit-btn" class="submit-button" disabled>
+                <span class="btn-text">Mark Present</span>
+                <span class="spinner" style="display: none;"></span>
+            </button>
+        </form>
+        
+        <div id="message" class="message" style="display: none;"></div>
+        
+        <footer class="page-footer">
+            <p><a href="faculty.html" class="faculty-link">Faculty Login</a></p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
+                <span id="current-time">Loading time...</span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Student attendance page loaded');
+            
+            const form = document.getElementById('attendance-form');
+            const messageDiv = document.getElementById('message');
+            const submitBtn = document.getElementById('submit-btn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const spinner = submitBtn.querySelector('.spinner');
+            const sessionStatusCard = document.getElementById('session-status');
+            const sessionNameEl = document.getElementById('session-name');
+            const sessionDetailsEl = document.getElementById('session-details');
+            const locationStatusCard = document.getElementById('location-status');
+            const locationNameEl = document.getElementById('location-name');
+            const locationDetailsEl = document.getElementById('location-details');
+
+            let currentSession = null;
+            let userLocation = null;
+            let deviceId = null;
+            let locationAllowed = false;
+
+            // Initialize device ID (create unique identifier for this browser/device)
+            function initializeDeviceId() {
+                let storedDeviceId = localStorage.getItem('attendance_device_id');
+                if (!storedDeviceId) {
+                    // Generate a unique device ID
+                    storedDeviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('attendance_device_id', storedDeviceId);
+                }
+                deviceId = storedDeviceId;
+                console.log('📱 Device ID initialized:', deviceId);
+            }
+
+            // Initialize IST time display
+            function updateCurrentTime() {
+                const now = new Date();
+                const istTime = now.toLocaleString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                document.getElementById('current-time').textContent = `Current Time (IST): ${istTime}`;
+            }
+
+            // Get user's geolocation
+            function getCurrentLocation() {
+                console.log('📍 Requesting user location...');
+                locationStatusCard.style.display = 'block';
+                
+                if (!navigator.geolocation) {
+                    updateLocationDisplay(false, 'Geolocation not supported', 'Your device does not support location services.');
+                    return;
+                }
+
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 minutes
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            elevation: position.coords.altitude || 242 // Default to campus elevation if not available
+                        };
+                        
+                        console.log('📍 Location obtained:', userLocation);
+                        checkLocationValidity(userLocation);
+                    },
+                    (error) => {
+                        console.error('💥 Geolocation error:', error);
+                        let errorMessage = '';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = 'Please allow location access to mark attendance.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = 'Location information unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = 'Location request timed out.';
+                                break;
+                            default:
+                                errorMessage = 'Unknown location error.';
+                                break;
+                        }
+                        updateLocationDisplay(false, 'Location Error', errorMessage);
+                    },
+                    options
+                );
+            }
+
+            // Check if location is within allowed campus areas - Updated to match server logic
+            function checkLocationValidity(location) {
+                console.log('🔍 Checking location validity for:', location);
+                
+                // This should match the ALLOWED_LOCATIONS array in your server.js
+                const allowedLocations = [
+                    { 
+                        name: 'My Location',
+                        lat: 21.09509835312697, 
+                        lng: 79.07928090334806, 
+                        elevation: 242, 
+                        radius: 25 
+                    },
+                    { 
+                        name: 'PS Location',
+                        lat: 21.096123, 
+                        lng: 79.080123, 
+                        elevation: 245,
+                        radius: 20 
+                    },
+                    { 
+                        name: '403 Test',
+                        lat: 21.1796976300, 
+                        lng: 79.060933300, 
+                        elevation: 288.80,
+                        radius: 50
+                    },
+                    { 
+                        name: 'Mech Building',
+                        lat: 21.094001, 
+                        lng: 79.078001, 
+                        elevation: 240,
+                        radius: 50 
+                    },
+                    { 
+                        name: 'DT-701',
+                        lat: 21.097555, 
+                        lng: 79.081555, 
+                        elevation: 250,
+                        radius: 10
+                    }
+                ];
+
+                let validLocation = null;
+                let calculatedDistance = 0;
+                let elevationDiff = 0;
+                let detailedLog = [];
+
+                console.log('📊 Checking against all locations:');
+                
+                for (const allowedLoc of allowedLocations) {
+                    calculatedDistance = calculateDistance(
+                        location.latitude, location.longitude,
+                        allowedLoc.lat, allowedLoc.lng
+                    );
+                    
+                    elevationDiff = Math.abs((location.elevation || allowedLoc.elevation) - allowedLoc.elevation);
+                    
+                    const withinRadius = calculatedDistance <= allowedLoc.radius;
+                    const withinElevation = elevationDiff <= 10;
+                    const isValid = withinRadius && withinElevation;
+                    
+                    const logEntry = {
+                        name: allowedLoc.name,
+                        distance: Math.round(calculatedDistance * 100) / 100, // Round to 2 decimals
+                        allowedRadius: allowedLoc.radius,
+                        withinRadius: withinRadius,
+                        elevationDiff: Math.round(elevationDiff * 100) / 100,
+                        withinElevation: withinElevation,
+                        valid: isValid
+                    };
+                    
+                    detailedLog.push(logEntry);
+                    
+                    console.log(`📍 ${allowedLoc.name}: 
+                        Distance: ${logEntry.distance}m (limit: ${allowedLoc.radius}m) - ${withinRadius ? '✅' : '❌'}
+                        Elevation diff: ${logEntry.elevationDiff}m (limit: 10m) - ${withinElevation ? '✅' : '❌'}
+                        Overall: ${isValid ? '✅ VALID' : '❌ INVALID'}`);
+                    
+                    // Check if within this location's specific radius and elevation tolerance
+                    if (isValid) {
+                        validLocation = allowedLoc;
+                        console.log(`🎯 Found valid location: ${allowedLoc.name}`);
+                        break;
+                    }
+                }
+
+                console.log('📋 Summary of all location checks:', detailedLog);
+
+                if (validLocation) {
+                    locationAllowed = true;
+                    console.log('✅ Location allowed:', validLocation.name);
+                    updateLocationDisplay(
+                        true, 
+                        validLocation.name, 
+                        `Location verified. Distance: ${Math.round(calculatedDistance)}m from ${validLocation.name}.`
+                    );
+                } else {
+                    locationAllowed = false;
+                    console.log('❌ No valid location found');
+                    
+                    // Find closest location for better error message
+                    let closestLocation = allowedLocations[0];
+                    let closestDistance = calculateDistance(location.latitude, location.longitude, closestLocation.lat, closestLocation.lng);
+                    
+                    for (const loc of allowedLocations) {
+                        const dist = calculateDistance(location.latitude, location.longitude, loc.lat, loc.lng);
+                        if (dist < closestDistance) {
+                            closestDistance = dist;
+                            closestLocation = loc;
+                        }
+                    }
+                    
+                    console.log(`🎯 Closest location: ${closestLocation.name} at ${Math.round(closestDistance)}m`);
+                    
+                    updateLocationDisplay(
+                        false, 
+                        'Outside Campus', 
+                        `You must be within campus premises. Closest location: ${closestLocation.name} (${Math.round(closestDistance)}m away, need to be within ${closestLocation.radius}m).`
+                    );
+                }
+
+                updateSubmitButtonState();
+            }
+
+            // Calculate distance between two coordinates
+            function calculateDistance(lat1, lng1, lat2, lng2) {
+                const R = 6371000; // Earth's radius in meters
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            // Update location status display
+            function updateLocationDisplay(isValid, name, details) {
+                const statusIndicator = locationStatusCard.querySelector('.status-indicator');
+                
+                if (isValid) {
+                    statusIndicator.className = 'status-indicator active';
+                    locationNameEl.textContent = name;
+                    locationDetailsEl.textContent = details;
+                } else {
+                    statusIndicator.className = 'status-indicator inactive';
+                    locationNameEl.textContent = name;
+                    locationDetailsEl.textContent = details;
+                }
+            }
+
+            // Check session status on load and set up polling
+            checkSessionStatus();
+            setInterval(checkSessionStatus, 10000); // Check every 10 seconds
+
+            async function checkSessionStatus() {
+                try {
+                    const response = await fetch('/api/session-status');
+                    const data = await response.json();
+                    
+                    currentSession = data.session;
+                    updateSessionDisplay(data.active, data.session);
+                    updateSubmitButtonState();
+                    
+                } catch (error) {
+                    console.error('💥 Error checking session status:', error);
+                    updateSessionDisplay(false, null);
+                    updateSubmitButtonState();
+                }
+            }
+
+            function updateSessionDisplay(isActive, session) {
+                const statusIndicator = sessionStatusCard.querySelector('.status-indicator');
+                
+                sessionStatusCard.style.display = 'block';
+                
+                if (isActive && session) {
+                    // Active session
+                    statusIndicator.className = 'status-indicator active';
+                    sessionNameEl.textContent = session.session_name;
+                    sessionDetailsEl.innerHTML = `
+                        <strong>Room:</strong> ${session.room_number} | 
+                        <strong>Status:</strong> Active - You can mark attendance now
+                    `;
+                } else {
+                    // No active session
+                    statusIndicator.className = 'status-indicator inactive';
+                    sessionNameEl.textContent = 'No Active Session';
+                    sessionDetailsEl.textContent = 'Please wait for faculty to start an attendance session.';
+                }
+            }
+
+            function updateSubmitButtonState() {
+                const canSubmit = currentSession && locationAllowed && userLocation;
+                
+                submitBtn.disabled = !canSubmit;
+                
+                if (canSubmit) {
+                    submitBtn.classList.remove('disabled');
+                    btnText.textContent = 'Mark Present';
+                } else {
+                    submitBtn.classList.add('disabled');
+                    
+                    if (!currentSession) {
+                        btnText.textContent = 'No Active Session';
+                    } else if (!locationAllowed) {
+                        btnText.textContent = 'Location Not Valid';
+                    } else if (!userLocation) {
+                        btnText.textContent = 'Location Required';
+                    } else {
+                        btnText.textContent = 'Please Wait';
+                    }
+                }
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('📝 Form submitted');
+                
+                if (!currentSession) {
+                    showMessage('No active session. Please wait for faculty to start a session.', 'error');
+                    return;
+                }
+
+                if (!userLocation) {
+                    showMessage('Location access required. Please allow location and try again.', 'error');
+                    getCurrentLocation();
+                    return;
+                }
+
+                if (!locationAllowed) {
+                    showMessage('You must be within university premises to mark attendance.', 'error');
+                    return;
+                }
+                
+                setLoading(true);
+                showMessage('', '');
+
+                const email = form.email.value.trim();
+                console.log('📧 Email:', email);
+                console.log('📍 Location:', userLocation);
+                console.log('📱 Device ID:', deviceId);
+
+                try {
+                    const response = await fetch('/api/attendance', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json' 
+                        },
+                        body: JSON.stringify({ 
+                            email: email,
+                            latitude: userLocation.latitude,
+                            longitude: userLocation.longitude,
+                            elevation: userLocation.elevation,
+                            deviceId: deviceId
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    console.log('📊 Response data:', result);
+                    
+                    if (response.ok && result.success) {
+                        showMessage(result.message || 'Attendance marked successfully!', 'success');
+                        form.reset();
+                        console.log('✅ Attendance marked successfully');
+                    } else {
+                        showMessage(result.message || 'An error occurred.', 'error');
+                        console.log('❌ Request failed:', result.message);
+                    }
+                } catch (error) {
+                    console.error('💥 Attendance submission error:', error);
+                    showMessage('Could not connect to the server. Please check if the server is running on localhost:3000', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            function setLoading(isLoading) {
+                const wasDisabled = submitBtn.disabled;
+                submitBtn.disabled = isLoading || !currentSession || !locationAllowed;
+                btnText.style.display = isLoading ? 'none' : 'inline-block';
+                spinner.style.display = isLoading ? 'inline-block' : 'none';
+                
+                if (isLoading) {
+                    btnText.textContent = 'Marking...';
+                } else {
+                    updateSubmitButtonState();
+                }
+            }
+            
+            function showMessage(msg, type) {
+                if (msg) {
+                    messageDiv.textContent = msg;
+                    messageDiv.className = `message ${type}`;
+                    messageDiv.style.display = 'block';
+                    
+                    if (type === 'success') {
+                        setTimeout(() => {
+                            messageDiv.style.display = 'none';
+                        }, 5000);
+                    }
+                } else {
+                    messageDiv.style.display = 'none';
+                }
+            }
+
+            // Initialize everything
+            initializeDeviceId();
+            getCurrentLocation();
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000); // Update time every second
+        });
+    </script>
+</body>
+</html>
