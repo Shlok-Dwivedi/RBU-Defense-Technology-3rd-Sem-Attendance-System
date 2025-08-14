@@ -17,63 +17,61 @@ const port = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-default-jwt-secret';
 
 // Allowed locations with 5m radius (coordinates and elevation in meters)
-const ALLOWED_LOCATIONS = [
-     { name: 'My Location',
-        lat: 21.09509835312697, 
-        lng: 79.07928090334806, 
-        elevation: 242, 
-        radius: 25, 
-    },
+const allowedLocations = [
+                    { 
+                        name: 'My Location',
+                        lat: 21.09509835312697, 
+                        lng: 79.07928090334806, 
+                        elevation: 242, 
+                        radius: 25 
+                    },
 
-     { name: 'My Location-mobile',
-        lat: 21.094416900, 
-        lng: 79.079032800, 
-        elevation: 242.20, 
-        radius: 25, 
-    },
+                    { 
+                        name: 'My Location Mobile',
+                        lat: 21.094541300, 
+                        lng: 79.079037000, 
+                        elevation: 242.30, 
+                        radius: 25 
+                    },
 
-     { name: 'Shubham Bhai',
-        lat: 23.259933300, 
-        lng: 77.412615000, 
-        elevation: 242, 
-        radius: 100, 
-    },
+                    { 
+                        name: 'Shubham Bhai',
+                        lat: 23.259933300, 
+                        lng: 77.412615000, 
+                        elevation: 242, 
+                        radius: 100 
+                    },
 
-
-      { 
-        name: 'PS Location', //NEED TO CHANGE
-        lat: 21.145425200, 
-        lng: 79.147865600, 
-        elevation: 232.40
-        radius: 20 
-    },
-
-    { 
-        name: '403 Test', //NEED TO CHANGE
-        lat: 21.176865486, 
-        lng: 79.061328692, 
-        elevation: 288.80,
-        radius: 50
-    },
-
-
-    // New Location 2 (Replace with your data)
-    { 
-        name: 'Mech Building', //NEED TO CHANGE
-        lat: 21.094001, 
-        lng: 79.078001, 
-        elevation: 240,
-        radius: 50 
-    },
-    // New Location 3 (Replace with your data)
-    { 
-        name: 'DT-701', //NEED TO CHANGE
-        lat: 21.097555, 
-        lng: 79.081555, 
-        elevation: 250,
-        radius: 10
-    }
-];
+                    
+                    { 
+                        name: 'Pranav Bhai',
+                        lat: 21.145425200, 
+                        lng: 79.147865600, 
+                        elevation: 232.40,
+                        radius: 50 
+                    },
+                    { 
+                        name: '403 Test',
+                        lat: 21.1796976300, 
+                        lng: 79.060933300, 
+                        elevation: 288.80,
+                        radius: 50
+                    },
+                    { 
+                        name: 'Mech Building',
+                        lat: 21.094001, 
+                        lng: 79.078001, 
+                        elevation: 240,
+                        radius: 50 
+                    },
+                    { 
+                        name: 'DT-701',
+                        lat: 21.097555, 
+                        lng: 79.081555, 
+                        elevation: 250,
+                        radius: 10
+                    }
+                ];
 
 const LOCATION_RADIUS = 25; // meters
 
@@ -791,6 +789,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
