@@ -261,7 +261,7 @@ const authMiddleware = (req, res, next) => {
 
 // --- SESSION MANAGEMENT ENDPOINTS ---
 
-// Get all sessions
+// Get all sessions (updated to show multiple active sessions)
 app.get('/api/faculty/sessions', authMiddleware, async (req, res) => {
     console.log('📋 Fetching all sessions');
     try {
@@ -272,7 +272,7 @@ app.get('/api/faculty/sessions', authMiddleware, async (req, res) => {
             FROM attendance_sessions s
             LEFT JOIN attendance_records ar ON s.id = ar.session_id
             GROUP BY s.id
-            ORDER BY s.start_time DESC
+            ORDER BY s.is_active DESC, s.start_time DESC
         `;
         
         const [rows] = await pool.query(query);
@@ -284,28 +284,26 @@ app.get('/api/faculty/sessions', authMiddleware, async (req, res) => {
     }
 });
 
-// Get active session
+// Get active sessions (updated to return multiple active sessions)
 app.get('/api/faculty/sessions/active', authMiddleware, async (req, res) => {
-    console.log('🔴 Fetching active session');
+    console.log('🔴 Fetching active sessions');
     try {
         const [rows] = await pool.query(
-            'SELECT * FROM attendance_sessions WHERE is_active = TRUE ORDER BY start_time DESC LIMIT 1'
+            'SELECT * FROM attendance_sessions WHERE is_active = TRUE ORDER BY start_time DESC'
         );
         
-        if (rows.length > 0) {
-            console.log('✅ Found active session:', rows[0].session_name);
-            res.json({ session: rows[0] });
-        } else {
-            console.log('ℹ️ No active session found');
-            res.json({ session: null });
-        }
+        console.log(`✅ Found ${rows.length} active session(s)`);
+        res.json({ 
+            sessions: rows,
+            count: rows.length 
+        });
     } catch (error) {
-        console.error('💥 Error fetching active session:', error);
-        res.status(500).json({ message: 'Failed to fetch active session.' });
+        console.error('💥 Error fetching active sessions:', error);
+        res.status(500).json({ message: 'Failed to fetch active sessions.' });
     }
 });
 
-// Start new session with room filter
+// Start new session with 5-session limit
 app.post('/api/faculty/sessions', authMiddleware, [
     body('session_name').notEmpty().trim(),
     body('room_number').notEmpty().trim()
@@ -324,15 +322,30 @@ app.post('/api/faculty/sessions', authMiddleware, [
     const { session_name, room_number } = req.body;
     
     try {
-        // Check if there's already an active session
+        // Check active session count (limit to 5)
         const [activeRows] = await pool.query(
-            'SELECT id FROM attendance_sessions WHERE is_active = TRUE'
+            'SELECT COUNT(*) as active_count FROM attendance_sessions WHERE is_active = TRUE'
         );
         
-        if (activeRows.length > 0) {
+        const activeCount = activeRows[0].active_count;
+        
+        if (activeCount >= 5) {
             return res.status(409).json({
                 success: false,
-                message: 'There is already an active session. Please end it before starting a new one.'
+                message: 'Maximum of 5 concurrent sessions allowed. Please end an existing session before starting a new one.'
+            });
+        }
+        
+        // Check if there's already an active session for this room
+        const [roomSessionRows] = await pool.query(
+            'SELECT id, session_name FROM attendance_sessions WHERE is_active = TRUE AND room_number = ?',
+            [room_number]
+        );
+        
+        if (roomSessionRows.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: `Room ${room_number} already has an active session: "${roomSessionRows[0].session_name}". Please end it before starting a new session for this room.`
             });
         }
         
@@ -342,11 +355,14 @@ app.post('/api/faculty/sessions', authMiddleware, [
             [session_name, room_number, req.user.username]
         );
         
-        console.log('✅ Session started successfully:', session_name);
+        console.log('✅ Session started successfully:', session_name, 'for room:', room_number);
+        console.log(`📊 Active sessions: ${activeCount + 1}/5`);
+        
         res.status(201).json({
             success: true,
-            message: 'Attendance session started successfully!',
-            session_id: result.insertId
+            message: `Attendance session started successfully! (${activeCount + 1}/5 active sessions)`,
+            session_id: result.insertId,
+            active_sessions_count: activeCount + 1
         });
         
     } catch (error) {
@@ -358,13 +374,29 @@ app.post('/api/faculty/sessions', authMiddleware, [
     }
 });
 
-// End session
+// End specific session by ID
 app.put('/api/faculty/sessions/:id/end', authMiddleware, async (req, res) => {
     console.log('⏹️ Ending session:', req.params.id);
     
     const sessionId = req.params.id;
     
     try {
+        // Get session details before ending
+        const [sessionRows] = await pool.query(
+            'SELECT session_name, room_number FROM attendance_sessions WHERE id = ? AND is_active = TRUE',
+            [sessionId]
+        );
+        
+        if (sessionRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session not found or already ended.'
+            });
+        }
+        
+        const session = sessionRows[0];
+        
+        // End the session
         const [result] = await pool.query(
             'UPDATE attendance_sessions SET is_active = FALSE, end_time = NOW() WHERE id = ? AND is_active = TRUE',
             [sessionId]
@@ -377,10 +409,20 @@ app.put('/api/faculty/sessions/:id/end', authMiddleware, async (req, res) => {
             });
         }
         
-        console.log('✅ Session ended successfully');
+        // Get updated active session count
+        const [activeRows] = await pool.query(
+            'SELECT COUNT(*) as active_count FROM attendance_sessions WHERE is_active = TRUE'
+        );
+        
+        const remainingActive = activeRows[0].active_count;
+        
+        console.log('✅ Session ended successfully:', session.session_name);
+        console.log(`📊 Remaining active sessions: ${remainingActive}/5`);
+        
         res.json({
             success: true,
-            message: 'Session ended successfully!'
+            message: `Session "${session.session_name}" for Room ${session.room_number} ended successfully! (${remainingActive}/5 active sessions remaining)`,
+            remaining_active_sessions: remainingActive
         });
         
     } catch (error) {
@@ -388,6 +430,32 @@ app.put('/api/faculty/sessions/:id/end', authMiddleware, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to end session.'
+        });
+    }
+});
+
+// End all active sessions (new endpoint for emergency situations)
+app.put('/api/faculty/sessions/end-all', authMiddleware, async (req, res) => {
+    console.log('⏹️ Ending all active sessions');
+    
+    try {
+        const [result] = await pool.query(
+            'UPDATE attendance_sessions SET is_active = FALSE, end_time = NOW() WHERE is_active = TRUE'
+        );
+        
+        console.log('✅ All sessions ended successfully, affected:', result.affectedRows);
+        
+        res.json({
+            success: true,
+            message: `All ${result.affectedRows} active sessions have been ended.`,
+            sessions_ended: result.affectedRows
+        });
+        
+    } catch (error) {
+        console.error('💥 Error ending all sessions:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to end all sessions.'
         });
     }
 });
@@ -415,33 +483,7 @@ app.post('/api/attendance', [
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD in IST
     
     try {
-        // Check if there's an active session
-        const [sessionRows] = await pool.query(
-            'SELECT id, session_name, room_number FROM attendance_sessions WHERE is_active = TRUE ORDER BY start_time DESC LIMIT 1'
-        );
-        
-        if (sessionRows.length === 0) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'No active attendance session. Please wait for faculty to start a session.' 
-            });
-        }
-        
-        const activeSession = sessionRows[0];
-        console.log('📍 Active session found:', activeSession.session_name);
-        
-        // Verify geolocation
-        const locationCheck = isLocationAllowed(latitude, longitude, elevation);
-        if (!locationCheck.allowed) {
-            return res.status(403).json({
-                success: false,
-                message: 'You must be within the university premises to mark attendance.'
-            });
-        }
-        
-        console.log('✅ Location verified:', locationCheck.location);
-        
-        // Check if student exists
+        // Check if student exists first
         const [studentRows] = await pool.query('SELECT * FROM students WHERE email = ?', [email]);
         
         if (studentRows.length === 0) {
@@ -453,13 +495,32 @@ app.post('/api/attendance', [
         
         const student = studentRows[0];
         
-        // Check room match - session must be for the student's room
-        if (activeSession.room_number !== student.room_number) {
-            return res.status(403).json({
-                success: false,
-                message: `This session is for Room ${activeSession.room_number}. You are assigned to Room ${student.room_number || 'Not Assigned'}.`
+        // Check if there's an active session for student's room
+        const [sessionRows] = await pool.query(
+            'SELECT id, session_name, room_number FROM attendance_sessions WHERE is_active = TRUE AND room_number = ? ORDER BY start_time DESC LIMIT 1',
+            [student.room_number]
+        );
+        
+        if (sessionRows.length === 0) {
+            return res.status(403).json({ 
+                success: false, 
+                message: `No active attendance session for Room ${student.room_number || 'Not Assigned'}. Please wait for faculty to start a session for your room.` 
             });
         }
+        
+        const activeSession = sessionRows[0];
+        console.log('🏫 Active session found for room:', activeSession.room_number, '- Session:', activeSession.session_name);
+        
+        // Verify geolocation
+        const locationCheck = isLocationAllowed(latitude, longitude, elevation);
+        if (!locationCheck.allowed) {
+            return res.status(403).json({
+                success: false,
+                message: 'You must be within the university premises to mark attendance.'
+            });
+        }
+        
+        console.log('✅ Location verified:', locationCheck.location);
         
         // Check if device already marked attendance for this session
         const [deviceRows] = await pool.query(
@@ -495,10 +556,10 @@ app.post('/api/attendance', [
             [email, today, 'P', activeSession.id, latitude, longitude, elevation, deviceId, locationCheck.location]
         );
         
-        console.log('✅ Attendance marked for:', email, 'in session:', activeSession.session_name);
+        console.log('✅ Attendance marked for:', email, 'in session:', activeSession.session_name, 'for room:', activeSession.room_number);
         res.status(201).json({ 
             success: true, 
-            message: `Attendance marked for session: ${activeSession.session_name}` 
+            message: `Attendance marked for session: ${activeSession.session_name} (Room ${activeSession.room_number})` 
         });
         
     } catch (error) {
@@ -608,23 +669,57 @@ app.get('/api/faculty/attendance-summary', authMiddleware, async (req, res) => {
     }
 });
 
-// --- CHECK SESSION STATUS ENDPOINT (for student page) ---
+// --- CHECK SESSION STATUS ENDPOINT (updated for student page) ---
 app.get('/api/session-status', async (req, res) => {
     console.log('🔍 Checking session status');
+    const { email } = req.query;
+    
     try {
-        const [rows] = await pool.query(
-            'SELECT id, session_name, room_number FROM attendance_sessions WHERE is_active = TRUE ORDER BY start_time DESC LIMIT 1'
-        );
-        
-        if (rows.length > 0) {
-            res.json({ 
-                active: true, 
-                session: rows[0] 
-            });
+        if (email) {
+            // If email provided, check for active session for student's specific room
+            const [studentRows] = await pool.query('SELECT room_number FROM students WHERE email = ?', [email]);
+            
+            if (studentRows.length === 0) {
+                return res.json({ 
+                    active: false, 
+                    session: null,
+                    message: 'Student not found' 
+                });
+            }
+            
+            const studentRoom = studentRows[0].room_number;
+            
+            const [sessionRows] = await pool.query(
+                'SELECT id, session_name, room_number FROM attendance_sessions WHERE is_active = TRUE AND room_number = ? ORDER BY start_time DESC LIMIT 1',
+                [studentRoom]
+            );
+            
+            if (sessionRows.length > 0) {
+                res.json({ 
+                    active: true, 
+                    session: sessionRows[0],
+                    student_room: studentRoom
+                });
+            } else {
+                res.json({ 
+                    active: false, 
+                    session: null,
+                    student_room: studentRoom,
+                    message: `No active session for Room ${studentRoom}`
+                });
+            }
         } else {
+            // General check - return count of active sessions
+            const [rows] = await pool.query(
+                'SELECT COUNT(*) as active_count FROM attendance_sessions WHERE is_active = TRUE'
+            );
+            
+            const activeCount = rows[0].active_count;
+            
             res.json({ 
-                active: false, 
-                session: null 
+                active: activeCount > 0, 
+                active_sessions_count: activeCount,
+                message: activeCount > 0 ? `${activeCount} active session(s)` : 'No active sessions'
             });
         }
     } catch (error) {
@@ -688,10 +783,3 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
-
-
-
-
-
-
-
