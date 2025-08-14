@@ -1630,4 +1630,278 @@ button:disabled {
         text-align: center;
         gap: 0.75rem;
     }
+
+}
+
+
+/* Enhanced Mobile Responsive Table Styles */
+@media (max-width: 768px) {
+    /* Ensure proper horizontal scrolling for tables */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Alternative: Card-based layout for mobile tables */
+    .data-table {
+        min-width: 100%;
+        font-size: 0.85rem;
+    }
+
+    /* Option 1: Horizontal scrolling approach */
+    .data-table th,
+    .data-table td {
+        white-space: nowrap;
+        padding: 0.75rem 0.5rem;
+        min-width: 120px; /* Ensure minimum column width */
+    }
+
+    /* Specific column widths for better mobile display */
+    .data-table th:first-child,
+    .data-table td:first-child {
+        min-width: 150px; /* Name column */
+        position: sticky;
+        left: 0;
+        background: var(--surface);
+        z-index: 1;
+    }
+
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2) {
+        min-width: 180px; /* Email column */
+    }
+
+    .data-table th:nth-child(3),
+    .data-table td:nth-child(3) {
+        min-width: 100px; /* Room column */
+    }
+
+    .data-table th:nth-child(4),
+    .data-table td:nth-child(4) {
+        min-width: 120px; /* Date/Status column */
+    }
+
+    .data-table th:nth-child(5),
+    .data-table td:nth-child(5) {
+        min-width: 100px; /* Percentage/Actions column */
+    }
+
+    .data-table th:nth-child(6),
+    .data-table td:nth-child(6) {
+        min-width: 100px; /* Attendees column */
+    }
+}
+
+/* Alternative Mobile Table Layout - Card Style */
+@media (max-width: 576px) {
+    /* Hide table headers and restructure as cards */
+    .mobile-card-table .data-table thead {
+        display: none;
+    }
+
+    .mobile-card-table .data-table,
+    .mobile-card-table .data-table tbody,
+    .mobile-card-table .data-table tr,
+    .mobile-card-table .data-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .mobile-card-table .data-table tr {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: var(--surface);
+        box-shadow: var(--shadow-xs);
+    }
+
+    .mobile-card-table .data-table td {
+        border: none;
+        padding: 0.5rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .mobile-card-table .data-table td:before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--text-secondary);
+        min-width: 100px;
+    }
+}
+
+/* Enhanced Email Display for Mobile */
+@media (max-width: 768px) {
+    .email-cell {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .email-cell:hover {
+        overflow: visible;
+        white-space: normal;
+        word-break: break-all;
+    }
+}
+
+/* Session Name Truncation */
+@media (max-width: 768px) {
+    .session-name-cell {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Better Action Buttons for Mobile */
+@media (max-width: 768px) {
+    .actions {
+        flex-direction: row;
+        gap: 0.25rem;
+        justify-content: center;
+    }
+
+    .edit-button,
+    .delete-button {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.75rem;
+        min-width: auto;
+    }
+}
+
+/* Status badges responsive */
+@media (max-width: 768px) {
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .percentage {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Improved Filters Section for Mobile */
+@media (max-width: 768px) {
+    .filters-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .filters {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .filters .form-group {
+        margin-bottom: 0;
+    }
+
+    .date-filter-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .date-filter-group .form-input {
+        width: 100%;
+    }
+
+    .secondary-button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Tab improvements for mobile */
+@media (max-width: 768px) {
+    .tabs {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .tab-link {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+        font-size: 0.9rem;
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+/* Dashboard header mobile improvements */
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1rem 1.5rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .logout-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Tab content mobile spacing */
+@media (max-width: 768px) {
+    .tab-content {
+        padding: 1.5rem 1rem;
+    }
+
+    .tab-header {
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tab-header h2 {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+}
+
+/* Active session card mobile */
+@media (max-width: 768px) {
+    .active-session-card {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .session-status {
+        justify-content: center;
+    }
+
+    .session-details h3 {
+        font-size: 1rem;
+    }
+
+    .session-details p {
+        font-size: 0.85rem;
+    }
+}
+
+/* Empty state mobile */
+@media (max-width: 768px) {
+    .empty-state {
+        padding: 2rem 1rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.1rem;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
+    }
 }
