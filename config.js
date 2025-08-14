@@ -1,10 +1,9 @@
 // config.js - Add this new file to handle environment-specific URLs
 const config = {
-    // Automatically detect if we're in development or production
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3000/api' 
-        : '/api', // Use relative URLs in production
-    
+        : 'https://rbu-defense-technoogy-3rd-sem-attendance-system-production.up.railway.app/api',
+    // Automatically detect if we're in development or production
     // Alternative approach - you can also use environment detection
     isDevelopment: window.location.hostname === 'localhost',
     
