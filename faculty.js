@@ -1,9 +1,9 @@
 // Faculty Dashboard JavaScript - Updated with Dynamic Room Loading
 console.log('🚀 Faculty dashboard JavaScript loaded');
 
-// Global state management
+// Global state management (updated)
 let currentFacultyToken = null;
-let activeSession = null;
+let activeSessions = []; // Changed from single session to array
 let allSessions = [];
 let allStudents = [];
 let attendanceSummary = [];
@@ -41,10 +41,6 @@ const sessionRoomSelect = document.getElementById('session-room');
 
 // Active session elements
 const activeSessionContainer = document.getElementById('active-session-container');
-const activeSessionName = document.getElementById('active-session-name');
-const activeSessionRoom = document.getElementById('active-session-room');
-const activeSessionTime = document.getElementById('active-session-time');
-const endSessionBtn = document.getElementById('end-session-btn');
 const startSessionBtn = document.getElementById('start-session-btn');
 
 // Initialize dashboard when DOM is loaded
@@ -64,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
-// Event listeners setup
+// Remove the old endSessionBtn event listener from setupEventListeners since we now handle multiple sessions
 function setupEventListeners() {
     // Login form
     loginForm.addEventListener('submit', handleLogin);
@@ -75,7 +71,7 @@ function setupEventListeners() {
     // Session management
     startSessionBtn.addEventListener('click', openSessionModal);
     sessionForm.addEventListener('submit', handleStartSession);
-    endSessionBtn.addEventListener('click', handleEndSession);
+    // Note: Individual end session buttons are handled in updateActiveSessionsDisplay()
     
     // Filters
     roomFilter.addEventListener('change', loadAttendanceSummary);
@@ -110,7 +106,7 @@ async function handleLogin(e) {
     setLoginLoading(true);
     
     try {
-        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.login), { //...
+        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.login), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -149,7 +145,7 @@ function handleLogout() {
     showLogin();
     
     // Reset all data
-    activeSession = null;
+    activeSessions = [];
     allSessions = [];
     allStudents = [];
     attendanceSummary = [];
@@ -247,7 +243,7 @@ async function loadRoomsData() {
     console.log('🏠 Loading rooms data from database...');
     
     try {
-        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.rooms), { //...
+        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.rooms), {
             headers: { 'Authorization': `Bearer ${currentFacultyToken}` }
         });
         
@@ -341,55 +337,131 @@ function populateRoomFilters() {
     });
 }
 
+// Updated active sessions checking
 async function checkActiveSession() {
-    console.log('🔍 Checking for active session...');
+    console.log('🔍 Checking for active sessions...');
     
     try {
         const response = await fetch(getApiUrl('/faculty/sessions/active'), {
             headers: { 'Authorization': `Bearer ${currentFacultyToken}` }
         });
         
-        if (!response.ok) throw new Error('Failed to check active session');
+        if (!response.ok) throw new Error('Failed to check active sessions');
         
         const data = await response.json();
-        activeSession = data.session;
+        activeSessions = data.sessions || [];
         
-        updateActiveSessionDisplay();
+        updateActiveSessionsDisplay();
         
     } catch (error) {
-        console.error('💥 Error checking active session:', error);
-        activeSession = null;
-        updateActiveSessionDisplay();
+        console.error('💥 Error checking active sessions:', error);
+        activeSessions = [];
+        updateActiveSessionsDisplay();
     }
 }
 
-function updateActiveSessionDisplay() {
-    if (activeSession) {
-        console.log('✅ Active session found:', activeSession.session_name);
+// Updated display for multiple active sessions
+function updateActiveSessionsDisplay() {
+    const activeSessionContainer = document.getElementById('active-session-container');
+    const startSessionBtn = document.getElementById('start-session-btn');
+    
+    if (activeSessions.length > 0) {
+        console.log(`✅ ${activeSessions.length} active session(s) found`);
         
-        activeSessionContainer.style.display = 'block';
-        activeSessionName.textContent = activeSession.session_name;
-        activeSessionRoom.textContent = activeSession.room_number;
+        // Clear existing content
+        activeSessionContainer.innerHTML = '';
         
-        // Format start time
-        const startTime = new Date(activeSession.start_time);
-        activeSessionTime.textContent = startTime.toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            hour: '2-digit',
-            minute: '2-digit',
-            day: 'numeric',
-            month: 'short'
+        // Create header
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'active-sessions-header';
+        headerDiv.innerHTML = `
+            <h3>Active Sessions (${activeSessions.length}/5)</h3>
+            <div class="session-actions-header">
+                <button id="end-all-sessions-btn" class="danger-button" ${activeSessions.length === 0 ? 'disabled' : ''}>
+                    End All Sessions
+                </button>
+            </div>
+        `;
+        activeSessionContainer.appendChild(headerDiv);
+        
+        // Create sessions grid
+        const sessionsGrid = document.createElement('div');
+        sessionsGrid.className = 'active-sessions-grid';
+        
+        activeSessions.forEach((session, index) => {
+            const sessionCard = document.createElement('div');
+            sessionCard.className = 'active-session-card';
+            
+            // Format start time
+            const startTime = new Date(session.start_time);
+            const formattedTime = startTime.toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                hour: '2-digit',
+                minute: '2-digit',
+                day: 'numeric',
+                month: 'short'
+            });
+            
+            sessionCard.innerHTML = `
+                <div class="session-status">
+                    <div class="status-indicator active"></div>
+                    <span class="status-text">ACTIVE ${index + 1}</span>
+                </div>
+                <div class="session-details">
+                    <h4>${escapeHtml(session.session_name)}</h4>
+                    <p>Room: <strong>${escapeHtml(session.room_number)}</strong></p>
+                    <p>Started: ${formattedTime}</p>
+                </div>
+                <div class="session-actions">
+                    <button class="end-session-btn danger-button" data-session-id="${session.id}" data-session-name="${escapeHtml(session.session_name)}">
+                        End Session
+                    </button>
+                </div>
+            `;
+            
+            sessionsGrid.appendChild(sessionCard);
         });
         
-        startSessionBtn.disabled = true;
-        startSessionBtn.textContent = 'Session Active';
+        activeSessionContainer.appendChild(sessionsGrid);
+        activeSessionContainer.style.display = 'block';
+        
+        // Update start session button
+        if (activeSessions.length >= 5) {
+            startSessionBtn.disabled = true;
+            startSessionBtn.textContent = 'Maximum Sessions (5/5)';
+        } else {
+            startSessionBtn.disabled = false;
+            startSessionBtn.textContent = `+ Start New Session (${activeSessions.length}/5)`;
+        }
+        
+        // Add event listeners for end session buttons
+        document.querySelectorAll('.end-session-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const sessionId = e.target.dataset.sessionId;
+                const sessionName = e.target.dataset.sessionName;
+                handleEndSpecificSession(sessionId, sessionName);
+            });
+        });
+        
+        // Add event listener for end all sessions button
+        const endAllBtn = document.getElementById('end-all-sessions-btn');
+        if (endAllBtn) {
+            endAllBtn.addEventListener('click', handleEndAllSessions);
+        }
         
     } else {
-        console.log('ℹ️ No active session');
+        console.log('ℹ️ No active sessions');
         
-        activeSessionContainer.style.display = 'none';
+        activeSessionContainer.innerHTML = `
+            <div class="no-active-sessions">
+                <h3>No Active Sessions</h3>
+                <p>Start a new attendance session to begin tracking student attendance.</p>
+            </div>
+        `;
+        activeSessionContainer.style.display = 'block';
+        
         startSessionBtn.disabled = false;
-        startSessionBtn.textContent = '+ Start New Session';
+        startSessionBtn.textContent = '+ Start New Session (0/5)';
     }
 }
 
@@ -414,6 +486,7 @@ async function loadSessionsData() {
     }
 }
 
+// Updated sessions table population with better status indicators
 function populateSessionsTable() {
     if (!sessionsTableBody) return;
     
@@ -448,17 +521,27 @@ function populateSessionsTable() {
             }) : 'Ongoing';
         
         const statusBadge = session.is_active ? 
-            '<span class="status-badge status-active">Active</span>' :
-            '<span class="status-badge status-ended">Ended</span>';
+            '<span class="status-badge status-active">🟢 Active</span>' :
+            '<span class="status-badge status-ended">🔴 Ended</span>';
         
         row.innerHTML = `
-            <td>${escapeHtml(session.session_name)}</td>
-            <td>${escapeHtml(session.room_number)}</td>
+            <td>
+                <div class="session-name-cell">
+                    ${escapeHtml(session.session_name)}
+                    ${session.is_active ? '<span class="live-indicator">LIVE</span>' : ''}
+                </div>
+            </td>
+            <td><strong>${escapeHtml(session.room_number)}</strong></td>
             <td>${startTime}</td>
             <td>${endTime}</td>
             <td>${statusBadge}</td>
-            <td>${session.attendee_count || 0}</td>
+            <td><span class="attendee-count">${session.attendee_count || 0}</span></td>
         `;
+        
+        // Add special styling for active sessions
+        if (session.is_active) {
+            row.classList.add('active-session-row');
+        }
         
         sessionsTableBody.appendChild(row);
     });
@@ -657,6 +740,7 @@ function closeAllModals() {
     closeSessionModal();
 }
 
+// Updated session starting with room conflict checking
 async function handleStartSession(e) {
     e.preventDefault();
     console.log('▶️ Starting new session...');
@@ -669,8 +753,15 @@ async function handleStartSession(e) {
         return;
     }
     
-    if (activeSession) {
-        alert('There is already an active session. Please end it first.');
+    if (activeSessions.length >= 5) {
+        alert('Maximum of 5 concurrent sessions allowed. Please end an existing session first.');
+        return;
+    }
+    
+    // Check if room already has an active session
+    const roomConflict = activeSessions.find(session => session.room_number === roomNumber);
+    if (roomConflict) {
+        alert(`Room ${roomNumber} already has an active session: "${roomConflict.session_name}". Please end it first or choose a different room.`);
         return;
     }
     
@@ -696,7 +787,9 @@ async function handleStartSession(e) {
         
         if (result.success) {
             console.log('✅ Session started successfully');
-            alert('Attendance session started successfully!');
+            
+            const message = result.message || 'Attendance session started successfully!';
+            showSuccessToast(message);
             
             closeSessionModal();
             
@@ -719,24 +812,22 @@ async function handleStartSession(e) {
     }
 }
 
-async function handleEndSession() {
-    console.log('⏹️ Ending active session...');
+// Handle ending a specific session
+async function handleEndSpecificSession(sessionId, sessionName) {
+    console.log('⏹️ Ending specific session:', sessionId, sessionName);
     
-    if (!activeSession) {
-        alert('No active session to end');
+    if (!confirm(`Are you sure you want to end the session "${sessionName}"? Students will no longer be able to mark attendance for this session.`)) {
         return;
     }
     
-    if (!confirm('Are you sure you want to end this session? Students will no longer be able to mark attendance.')) {
-        return;
-    }
-    
-    const originalText = endSessionBtn.textContent;
-    endSessionBtn.disabled = true;
-    endSessionBtn.textContent = 'Ending...';
+    // Find the button that was clicked and update it
+    const endBtn = document.querySelector(`[data-session-id="${sessionId}"]`);
+    const originalText = endBtn.textContent;
+    endBtn.disabled = true;
+    endBtn.textContent = 'Ending...';
     
     try {
-        const response = await fetch(`${getApiUrl(window.CONFIG.endpoints.faculty.sessions)}/${activeSession.id}/end`, {
+        const response = await fetch(`${getApiUrl(window.CONFIG.endpoints.faculty.sessions)}/${sessionId}/end`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${currentFacultyToken}`
@@ -747,7 +838,10 @@ async function handleEndSession() {
         
         if (result.success) {
             console.log('✅ Session ended successfully');
-            alert('Session ended successfully!');
+            
+            // Show success message with session details
+            const message = result.message || `Session "${sessionName}" ended successfully!`;
+            showSuccessToast(message);
             
             // Refresh data
             await Promise.all([
@@ -763,10 +857,59 @@ async function handleEndSession() {
         console.error('💥 Error ending session:', error);
         alert('Error ending session. Please try again.');
     } finally {
-        endSessionBtn.disabled = false;
-        endSessionBtn.textContent = originalText;
+        endBtn.disabled = false;
+        endBtn.textContent = originalText;
     }
 }
+
+// Handle ending all sessions
+async function handleEndAllSessions() {
+    console.log('⏹️ Ending all active sessions...');
+    
+    if (!confirm(`Are you sure you want to end ALL ${activeSessions.length} active sessions? This will prevent students from marking attendance in any room.`)) {
+        return;
+    }
+    
+    const endAllBtn = document.getElementById('end-all-sessions-btn');
+    const originalText = endAllBtn.textContent;
+    endAllBtn.disabled = true;
+    endAllBtn.textContent = 'Ending All...';
+    
+    try {
+        const response = await fetch(getApiUrl('/api/faculty/sessions/end-all'), {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${currentFacultyToken}`
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ All sessions ended successfully');
+            
+            const message = result.message || 'All sessions ended successfully!';
+            showSuccessToast(message);
+            
+            // Refresh data
+            await Promise.all([
+                checkActiveSession(),
+                loadSessionsData()
+            ]);
+            
+        } else {
+            alert(result.message || 'Failed to end all sessions');
+        }
+        
+    } catch (error) {
+        console.error('💥 Error ending all sessions:', error);
+        alert('Error ending all sessions. Please try again.');
+    } finally {
+        endAllBtn.disabled = false;
+        endAllBtn.textContent = originalText;
+    }
+}
+
 
 // Filter functions
 function clearDateFilter() {
@@ -807,6 +950,37 @@ function togglePassword() {
     }
 }
 
+// Utility function to show success toast notifications
+function showSuccessToast(message) {
+    // Remove existing toast if any
+    const existingToast = document.querySelector('.success-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Create toast
+    const toast = document.createElement('div');
+    toast.className = 'success-toast';
+    toast.innerHTML = `
+        <div class="toast-content">
+            <span class="toast-icon">✅</span>
+            <span class="toast-message">${escapeHtml(message)}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Show animation
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // Auto remove
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+
 // Global functions (called from HTML)
 window.showTab = showTab;
 window.openSessionModal = openSessionModal;
@@ -814,4 +988,4 @@ window.closeSessionModal = closeSessionModal;
 window.togglePassword = togglePassword;
 
 
-console.log('✅ Faculty dashboard JavaScript initialized with dynamic room loading');
+console.log('✅ Faculty dashboard JavaScript initialized with multiple sessions support (max 5 concurrent sessions)');
