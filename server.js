@@ -83,7 +83,10 @@ app.use(cors({
         'http://127.0.0.1:3000',
         'https://stellular-platypus-675f9e.netlify.app/' // Add this line
     ],
-    credentials: true
+     credentials:true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 app.use(express.json());
@@ -678,5 +681,6 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
