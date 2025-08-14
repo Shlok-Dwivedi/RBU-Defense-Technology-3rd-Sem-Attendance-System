@@ -651,7 +651,18 @@ app.use((error, req, res, next) => {
     });
 });
 
+
 // --- START SERVER ---
+app.listen(port, '0.0.0.0', async () => {
+    console.log('🚀 Server starting...');
+    console.log(`✅ Server listening on port ${port}`); // Corrected log message
+    await testDbConnection();
+    console.log('✅ Server ready!');
+    // ...
+});
+
+
+/*// --- START SERVER ---
 app.listen(port, async () => {
     console.log('🚀 Server starting...');
     console.log(`📍 Server is running on http://localhost:${port}`);
@@ -661,4 +672,5 @@ app.listen(port, async () => {
     console.log('✅ Server ready!');
     console.log('🗝️ Password Encryption: Use bcrypt with 12 rounds');
     console.log('📍 Allowed locations configured for university premises');
-});
+
+});*/
