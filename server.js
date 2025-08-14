@@ -32,6 +32,14 @@ const ALLOWED_LOCATIONS = [
         radius: 100, 
     },
 
+     { 
+                        name: 'My Location Mobile',
+                        lat: 21.094541300, 
+                        lng: 79.079037000, 
+                        elevation: 242.30, 
+                        radius: 25 
+                    },
+
       { 
         name: 'PS Location', //NEED TO CHANGE
         lat: 21.096123, 
@@ -783,3 +791,4 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
