@@ -59,6 +59,7 @@
         </footer>
     </div>
 
+    <script src="config.js"></script> 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Student attendance page loaded');
@@ -316,7 +317,7 @@
 
             async function checkSessionStatus() {
                 try {
-                    const response = await fetch('/api/session-status');
+                    const response = await fetch(getApiUrl(window.CONFIG.endpoints.sessionStatus));
                     const data = await response.json();
                     
                     currentSession = data.session;
@@ -403,7 +404,7 @@
                 console.log('📱 Device ID:', deviceId);
 
                 try {
-                    const response = await fetch('/api/attendance', {
+                    const response = await fetch(getApiUrl(window.CONFIG.endpoints.attendance), { //...
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json' 
@@ -473,4 +474,5 @@
         });
     </script>
 </body>
+
 </html>
