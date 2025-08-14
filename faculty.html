@@ -7,6 +7,83 @@
     <meta name="description" content="Faculty dashboard for managing student attendance">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Additional mobile-specific styles */
+        @media (max-width: 576px) {
+            /* Show mobile cards instead of tables for very small screens */
+            .show-mobile-cards .table-container {
+                display: none;
+            }
+            
+            .show-mobile-cards .mobile-cards-container {
+                display: block !important;
+            }
+            
+            .mobile-card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: var(--shadow-xs);
+            }
+            
+            .mobile-card-header {
+                font-weight: 600;
+                color: var(--primary-color);
+                margin-bottom: 0.5rem;
+                font-size: 1rem;
+            }
+            
+            .mobile-card-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 0.25rem 0;
+                border-bottom: 1px solid var(--border-light);
+            }
+            
+            .mobile-card-row:last-child {
+                border-bottom: none;
+            }
+            
+            .mobile-card-label {
+                font-weight: 500;
+                color: var(--text-secondary);
+            }
+            
+            .mobile-card-value {
+                color: var(--text-primary);
+                text-align: right;
+                max-width: 60%;
+                word-break: break-word;
+            }
+        }
+
+        /* Improved responsive breakpoints */
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+                margin: 1rem auto;
+            }
+            
+            .tabs-container {
+                margin: 1rem auto;
+            }
+            
+            .tab-content {
+                padding: 1rem;
+            }
+            
+            .data-table {
+                font-size: 0.8rem;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 0.5rem 0.25rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Login View -->
@@ -86,10 +163,11 @@
                     </div>
                 </div>
                 
-                <!-- Sessions List -->
-               <!-- <div class="sessions-section">
+                <!-- Sessions List with Mobile Optimization -->
+                <div class="sessions-section">
                     <h3>All Sessions</h3>
-                    <div class="table-container">
+                    <!-- Sessions Table - Mobile Optimized -->
+                    <div class="table-container mobile-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -102,29 +180,11 @@
                                 </tr>
                             </thead>
                             <tbody id="sessions-table-body">
-                                
+                                <!-- Dynamic content will be inserted here -->
                             </tbody>
                         </table>
                     </div>
-                </div>-->
-                <!-- Sessions Table - Mobile Optimized -->
-<div class="table-container mobile-responsive">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Session Name</th>
-                <th>Room</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Status</th>
-                <th>Attendees</th>
-            </tr>
-        </thead>
-        <tbody id="sessions-table-body">
-            <!-- Dynamic content will be inserted here -->
-        </tbody>
-    </table>
-</div>
+                </div>
             </div>
 
             <!-- Attendance Summary Tab -->
@@ -133,41 +193,42 @@
                     <h2>Attendance Summary</h2>
                 </div>
                 
+                <!-- Enhanced Filters Section for Mobile -->
                 <div class="filters-section">
                     <div class="filters">
                         <div class="form-group">
-                            <label for="room-filter">Filter by Room No.</label>
+                            <label for="room-filter">Room</label>
                             <select id="room-filter" class="form-select">
                                 <option value="all">All Rooms</option>
-                                <!-- Room options will be populated dynamically -->
                             </select>
                         </div>
                         
                         <div class="form-group">
-                            <label for="date-filter">Filter by Date</label>
+                            <label for="date-filter">Date</label>
                             <div class="date-filter-group">
                                 <input type="date" id="date-filter" class="form-input">
                                 <button type="button" id="clear-date-btn" class="secondary-button">
-                                    Show All Dates
+                                    Clear
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="table-container">
+                <!-- Attendance Summary Table - Mobile Optimized -->
+                <div class="table-container mobile-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Full Name</th>
+                                <th>Name</th>
                                 <th>Email</th>
-                                <th>Room No.</th>
+                                <th>Room</th>
                                 <th>Attendance</th>
                                 <th>Percentage</th>
                             </tr>
                         </thead>
                         <tbody id="summary-table-body">
-                            <!-- Attendance data will be populated dynamically -->
+                            <!-- Dynamic content will be inserted here -->
                         </tbody>
                     </table>
                 </div>
@@ -191,21 +252,30 @@
                     </div>
                 </div>
                 
-                <div class="table-container">
+                <!-- Students Table - Mobile Optimized -->
+                <div class="table-container mobile-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Full Name</th>
+                                <th>Name</th>
                                 <th>Email</th>
-                                <th>Room No.</th>
+                                <th>Room</th>
                             </tr>
                         </thead>
                         <tbody id="students-table-body">
-                            <!-- Student data will be populated dynamically -->
+                            <!-- Dynamic content will be inserted here -->
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Alternative: Card-based layout for very small screens -->
+    <div class="mobile-cards-container" style="display: none;">
+        <!-- This will be shown on very small screens as an alternative to tables -->
+        <div id="mobile-cards-content">
+            <!-- Cards will be dynamically generated here -->
         </div>
     </div>
 
@@ -241,9 +311,85 @@
     </div>
 
     <script src="config.js"></script> 
-<script src="faculty.js"></script>
+    <script src="faculty.js"></script>
+    <script>
+        // Function to create mobile cards as an alternative to tables
+        function createMobileCards(data, type) {
+            const container = document.getElementById('mobile-cards-content');
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No data available</h3></div>';
+                return;
+            }
+            
+            let cardsHtml = '';
+            
+            data.forEach(item => {
+                if (type === 'sessions') {
+                    cardsHtml += `
+                        <div class="mobile-card">
+                            <div class="mobile-card-header">${item.session_name}</div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Room:</span>
+                                <span class="mobile-card-value">${item.room_number}</span>
+                            </div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Started:</span>
+                                <span class="mobile-card-value">${new Date(item.start_time).toLocaleString()}</span>
+                            </div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Status:</span>
+                                <span class="mobile-card-value">${item.is_active ? 'Active' : 'Ended'}</span>
+                            </div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Attendees:</span>
+                                <span class="mobile-card-value">${item.attendee_count || 0}</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (type === 'summary') {
+                    cardsHtml += `
+                        <div class="mobile-card">
+                            <div class="mobile-card-header">${item.full_name || item.email}</div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Email:</span>
+                                <span class="mobile-card-value">${item.email}</span>
+                            </div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Room:</span>
+                                <span class="mobile-card-value">${item.room_number || 'N/A'}</span>
+                            </div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Attendance:</span>
+                                <span class="mobile-card-value">${item.present_count}/${item.total_sessions}</span>
+                            </div>
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">Percentage:</span>
+                                <span class="mobile-card-value">${item.percentage.toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = cardsHtml;
+        }
+
+        // Function to toggle between table and card view based on screen size
+        function toggleMobileView() {
+            const isMobile = window.innerWidth <= 576;
+            const body = document.body;
+            
+            if (isMobile) {
+                body.classList.add('show-mobile-cards');
+            } else {
+                body.classList.remove('show-mobile-cards');
+            }
+        }
+
+        // Initialize on load and resize
+        window.addEventListener('load', toggleMobileView);
+        window.addEventListener('resize', toggleMobileView);
+    </script>
 </body>
-
 </html>
-
-
