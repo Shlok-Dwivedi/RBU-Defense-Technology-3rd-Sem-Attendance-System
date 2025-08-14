@@ -17,7 +17,7 @@ const port = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-default-jwt-secret';
 
 // Allowed locations with 5m radius (coordinates and elevation in meters)
-const allowedLocations = [
+const ALLOWED_LOCATIONS = [
                     { 
                         name: 'My Location',
                         lat: 21.09509835312697, 
@@ -789,6 +789,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
