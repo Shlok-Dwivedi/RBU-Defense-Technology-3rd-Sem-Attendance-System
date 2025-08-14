@@ -80,7 +80,6 @@ app.use((req, res, next) => {
 app.use(cors({
     origin: [
         'http://localhost:3000', 
-        'http://127.0.0.1:3000',
         'https://stellular-platypus-675f9e.netlify.app/',
          'https://rbudefmdm.ddns.net/api'// Add this line
     ],
@@ -682,6 +681,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
