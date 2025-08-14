@@ -327,35 +327,37 @@
 
             async function checkSessionStatus() {
                 try {
-                    // Get the email from the input field to check status for that student
                     const email = document.getElementById('email').value.trim();
-                    let url = getApiUrl(window.CONFIG.endpoints.sessionStatus);
-
-                    if (email) {
-                        url += `?email=${encodeURIComponent(email)}`;
+                    // If there's no email, we can't check for a specific session yet.
+                    if (!email) {
+                        updateSessionDisplay(false, null, 'Please enter your email to check for active sessions.');
+                        updateSubmitButtonState();
+                        return;
                     }
+
+                    // Build the URL to check for a session for this specific student's room
+                    let url = `${getApiUrl(window.CONFIG.endpoints.sessionStatus)}?email=${encodeURIComponent(email)}`;
 
                     const response = await fetch(url);
                     const data = await response.json();
                     
                     currentSession = data.session;
-                    updateSessionDisplay(data.active, data.session, data.message); // Pass message for more detailed feedback
+                    updateSessionDisplay(data.active, data.session, data.message);
                     updateSubmitButtonState();
                     
                 } catch (error) {
                     console.error('💥 Error checking session status:', error);
-                    updateSessionDisplay(false, null);
+                    updateSessionDisplay(false, null, 'Error connecting to the server.');
                     updateSubmitButtonState();
                 }
             }
 
             function updateSessionDisplay(isActive, session, message = '') {
                 const statusIndicator = sessionStatusCard.querySelector('.status-indicator');
-                
                 sessionStatusCard.style.display = 'block';
                 
                 if (isActive && session) {
-                    // Active session for the student's room
+                    // This block runs ONLY if a session is active for the student's room
                     statusIndicator.className = 'status-indicator active';
                     sessionNameEl.textContent = session.session_name;
                     sessionDetailsEl.innerHTML = `
@@ -363,13 +365,14 @@
                         <strong>Status:</strong> Active - You can mark attendance now
                     `;
                 } else {
-                    // No active session for the student's room
+                    // This block runs if NO session is active for the student's room
                     statusIndicator.className = 'status-indicator inactive';
                     sessionNameEl.textContent = 'No Active Session';
-                    // Use the specific message from the server if it exists
-                    sessionDetailsEl.textContent = message || 'Please wait for faculty to start an attendance session for your room.';
+                    // Display the specific reason from the server (e.g., "No active session for Room ME-12")
+                    sessionDetailsEl.textContent = message || 'Please wait for faculty to start a session for your room.';
                 }
             }
+
 
             function updateSubmitButtonState() {
                 const canSubmit = currentSession && locationAllowed && userLocation;
@@ -497,6 +500,7 @@
 </body>
 
 </html>
+
 
 
 
