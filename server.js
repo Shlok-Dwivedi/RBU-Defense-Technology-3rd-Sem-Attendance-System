@@ -25,6 +25,13 @@ const ALLOWED_LOCATIONS = [
         radius: 25, 
     },
 
+     { name: 'Shubham Bhai',
+        lat: 23.2599333, 
+        lng: 77.412615, 
+        elevation: 242, 
+        radius: 100, 
+    },
+
       { 
         name: 'PS Location', //NEED TO CHANGE
         lat: 21.096123, 
@@ -681,6 +688,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
