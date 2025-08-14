@@ -42,9 +42,9 @@ const ALLOWED_LOCATIONS = [
 
       { 
         name: 'PS Location', //NEED TO CHANGE
-        lat: 21.096123, 
-        lng: 79.080123, 
-        elevation: 245,
+        lat: 21.145425200, 
+        lng: 79.147865600, 
+        elevation: 232.40
         radius: 20 
     },
 
@@ -791,5 +791,6 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
