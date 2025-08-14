@@ -2,7 +2,7 @@
 const config = {
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3000/api' 
-        : 'https://rbu-defense-technoogy-3rd-sem-attendance-system-production.up.railway.app/api',
+        : 'rbu-defense-technology-3rd-sem-attendance-system-production.up.railway.app',
     // Automatically detect if we're in development or production
     // Alternative approach - you can also use environment detection
     isDevelopment: window.location.hostname === 'localhost',
