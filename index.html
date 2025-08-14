@@ -327,11 +327,19 @@
 
             async function checkSessionStatus() {
                 try {
-                    const response = await fetch(getApiUrl(window.CONFIG.endpoints.sessionStatus));
+                    // Get the email from the input field to check status for that student
+                    const email = document.getElementById('email').value.trim();
+                    let url = getApiUrl(window.CONFIG.endpoints.sessionStatus);
+
+                    if (email) {
+                        url += `?email=${encodeURIComponent(email)}`;
+                    }
+
+                    const response = await fetch(url);
                     const data = await response.json();
                     
                     currentSession = data.session;
-                    updateSessionDisplay(data.active, data.session);
+                    updateSessionDisplay(data.active, data.session, data.message); // Pass message for more detailed feedback
                     updateSubmitButtonState();
                     
                 } catch (error) {
@@ -341,13 +349,13 @@
                 }
             }
 
-            function updateSessionDisplay(isActive, session) {
+            function updateSessionDisplay(isActive, session, message = '') {
                 const statusIndicator = sessionStatusCard.querySelector('.status-indicator');
                 
                 sessionStatusCard.style.display = 'block';
                 
                 if (isActive && session) {
-                    // Active session
+                    // Active session for the student's room
                     statusIndicator.className = 'status-indicator active';
                     sessionNameEl.textContent = session.session_name;
                     sessionDetailsEl.innerHTML = `
@@ -355,10 +363,11 @@
                         <strong>Status:</strong> Active - You can mark attendance now
                     `;
                 } else {
-                    // No active session
+                    // No active session for the student's room
                     statusIndicator.className = 'status-indicator inactive';
                     sessionNameEl.textContent = 'No Active Session';
-                    sessionDetailsEl.textContent = 'Please wait for faculty to start an attendance session.';
+                    // Use the specific message from the server if it exists
+                    sessionDetailsEl.textContent = message || 'Please wait for faculty to start an attendance session for your room.';
                 }
             }
 
@@ -481,11 +490,14 @@
             getCurrentLocation();
             updateCurrentTime();
             setInterval(updateCurrentTime, 1000); // Update time every second
+
+            document.getElementById('email').addEventListener('input', checkSessionStatus);
         });
     </script>
 </body>
 
 </html>
+
 
 
 
