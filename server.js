@@ -78,7 +78,11 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: [
+        'http://localhost:3000', 
+        'http://127.0.0.1:3000',
+        'https://stellular-platypus-6f5b9e.netlify.app' // Add this line
+    ],
     credentials: true
 }));
 
@@ -674,3 +678,4 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
