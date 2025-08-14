@@ -110,7 +110,7 @@ async function handleLogin(e) {
     setLoginLoading(true);
     
     try {
-        const response = await fetch('/api/faculty/login', {
+        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.login), { //...
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -247,7 +247,7 @@ async function loadRoomsData() {
     console.log('🏠 Loading rooms data from database...');
     
     try {
-        const response = await fetch('/api/faculty/rooms', {
+        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.rooms), { //...
             headers: { 'Authorization': `Bearer ${currentFacultyToken}` }
         });
         
@@ -345,7 +345,7 @@ async function checkActiveSession() {
     console.log('🔍 Checking for active session...');
     
     try {
-        const response = await fetch('/api/faculty/sessions/active', {
+        const response = await fetch(getApiUrl('/faculty/sessions/active'), {
             headers: { 'Authorization': `Bearer ${currentFacultyToken}` }
         });
         
@@ -397,7 +397,7 @@ async function loadSessionsData() {
     console.log('📋 Loading sessions data...');
     
     try {
-        const response = await fetch('/api/faculty/sessions', {
+        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.sessions), {
             headers: { 'Authorization': `Bearer ${currentFacultyToken}` }
         });
         
@@ -496,7 +496,7 @@ async function loadAttendanceSummary() {
             params.append('date', date);
         }
         
-        const response = await fetch(`/api/faculty/attendance-summary?${params}`, {
+        const response = await fetch(`${getApiUrl(window.CONFIG.endpoints.faculty.attendanceSummary)}?${params}`, {
             headers: { 'Authorization': `Bearer ${currentFacultyToken}` }
         });
         
@@ -573,7 +573,7 @@ async function loadStudentsData() {
             params.append('room_number', roomNumber);
         }
         
-        const response = await fetch(`/api/faculty/students?${params}`, {
+        const response = await fetch(`${getApiUrl(window.CONFIG.endpoints.faculty.students)}?${params}`, {
             headers: { 'Authorization': `Bearer ${currentFacultyToken}` }
         });
         
@@ -680,7 +680,7 @@ async function handleStartSession(e) {
     submitBtn.textContent = 'Starting...';
     
     try {
-        const response = await fetch('/api/faculty/sessions', {
+        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.sessions), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -736,7 +736,7 @@ async function handleEndSession() {
     endSessionBtn.textContent = 'Ending...';
     
     try {
-        const response = await fetch(`/api/faculty/sessions/${activeSession.id}/end`, {
+        const response = await fetch(`${getApiUrl(window.CONFIG.endpoints.faculty.sessions)}/${activeSession.id}/end`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${currentFacultyToken}`
@@ -812,5 +812,6 @@ window.showTab = showTab;
 window.openSessionModal = openSessionModal;
 window.closeSessionModal = closeSessionModal;
 window.togglePassword = togglePassword;
+
 
 console.log('✅ Faculty dashboard JavaScript initialized with dynamic room loading');
