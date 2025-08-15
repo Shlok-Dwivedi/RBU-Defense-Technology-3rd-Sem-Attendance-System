@@ -11,8 +11,7 @@ const config = {
         faculty: {
             login: '/api/faculty/login',
             sessions: '/api/faculty/sessions',
-            // This is the specific endpoint that is failing:
-            activeSession: '/api/faculty/sessions/active', 
+            activeSession: '/api/faculty/sessions/active', // The endpoint that is failing
             endSession: '/api/faculty/sessions/:id/end',
             students: '/api/faculty/students',
             rooms: '/api/faculty/rooms',
