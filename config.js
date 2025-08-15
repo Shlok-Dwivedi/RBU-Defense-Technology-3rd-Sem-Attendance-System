@@ -1,18 +1,17 @@
-// config.js - FINAL CORRECTED VERSION
+// config.js - FINAL VERSION
 const config = {
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3000' // For local testing
         : 'https://rbu-defense-technology-3rd-sem.onrender.com', // Your LIVE backend URL
 
-    // API endpoints (ensure ALL endpoints start with /api)
     endpoints: {
         attendance: '/api/attendance',
         sessionStatus: '/api/session-status',
         faculty: {
             login: '/api/faculty/login',
             sessions: '/api/faculty/sessions',
-            activeSession: '/api/faculty/sessions/active', // The endpoint that is failing
-            endSession: '/api/faculty/sessions/:id/end',
+            activeSession: '/api/faculty/sessions/active',
+            endSession: '/api/faculty/sessions/{id}/end', // Using {id} as a placeholder
             students: '/api/faculty/students',
             rooms: '/api/faculty/rooms',
             attendanceSummary: '/api/faculty/attendance-summary'
@@ -20,11 +19,13 @@ const config = {
     }
 };
 
-// Helper function to build full API URLs
-function getApiUrl(endpoint) {
-    return config.API_BASE_URL + endpoint;
+function getApiUrl(endpoint, params = {}) {
+    let url = config.API_BASE_URL + endpoint;
+    for (const key in params) {
+        url = url.replace(`{${key}}`, params[key]);
+    }
+    return url;
 }
 
-// Export for use in other files
 window.CONFIG = config;
 window.getApiUrl = getApiUrl;
