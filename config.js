@@ -12,11 +12,13 @@ const config = {
         attendance: '/attendance',
         sessionStatus: '/session-status',
         faculty: {
-            login: '/faculty/login',
-            sessions: '/faculty/sessions',
-            students: '/faculty/students',
-            rooms: '/faculty/rooms',
-            attendanceSummary: '/faculty/attendance-summary'
+            login: '/api/faculty/login',
+            sessions: '/api/faculty/sessions',
+            activeSession: '/api/faculty/sessions/active',
+            endSession: '/api/faculty/sessions/:id/end',
+            students: '/api/faculty/students',
+            rooms: '/api/faculty/rooms',
+            attendanceSummary: '/api/faculty/attendance-summary'
         }
     }
 };
