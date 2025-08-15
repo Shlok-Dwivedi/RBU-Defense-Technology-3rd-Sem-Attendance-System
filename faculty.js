@@ -1,9 +1,9 @@
-// Faculty Dashboard JavaScript - Updated with Dynamic Room Loading
+// Faculty Dashboard JavaScript - Complete Updated Version
 console.log('🚀 Faculty dashboard JavaScript loaded');
 
-// Global state management (updated)
+// Global state management
 let currentFacultyToken = null;
-let activeSessions = []; // Changed from single session to array
+let activeSessions = []; // Changed from single session to array for multiple sessions
 let allSessions = [];
 let allStudents = [];
 let attendanceSummary = [];
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
-// Remove the old endSessionBtn event listener from setupEventListeners since we now handle multiple sessions
+// Event listeners setup
 function setupEventListeners() {
     // Login form
     loginForm.addEventListener('submit', handleLogin);
@@ -71,7 +71,6 @@ function setupEventListeners() {
     // Session management
     startSessionBtn.addEventListener('click', openSessionModal);
     sessionForm.addEventListener('submit', handleStartSession);
-    // Note: Individual end session buttons are handled in updateActiveSessionsDisplay()
     
     // Filters
     roomFilter.addEventListener('change', loadAttendanceSummary);
@@ -337,19 +336,29 @@ function populateRoomFilters() {
     });
 }
 
-// Updated active sessions checking
+// CORRECTED: Active sessions checking with proper endpoint
 async function checkActiveSession() {
     console.log('🔍 Checking for active sessions...');
     
     try {
-        const response = await fetch(getApiUrl('/faculty/sessions/active'), {
+        // FIXED: Using the correct endpoint from config
+        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.activeSession), {
             headers: { 'Authorization': `Bearer ${currentFacultyToken}` }
         });
         
         if (!response.ok) throw new Error('Failed to check active sessions');
         
         const data = await response.json();
-        activeSessions = data.sessions || [];
+        // Handle both single session response and multiple sessions
+        if (data.session) {
+            // Single session response (backwards compatibility)
+            activeSessions = [data.session];
+        } else if (data.sessions) {
+            // Multiple sessions response
+            activeSessions = data.sessions;
+        } else {
+            activeSessions = [];
+        }
         
         updateActiveSessionsDisplay();
         
@@ -362,9 +371,6 @@ async function checkActiveSession() {
 
 // Updated display for multiple active sessions
 function updateActiveSessionsDisplay() {
-    const activeSessionContainer = document.getElementById('active-session-container');
-    const startSessionBtn = document.getElementById('start-session-btn');
-    
     if (activeSessions.length > 0) {
         console.log(`✅ ${activeSessions.length} active session(s) found`);
         
@@ -740,7 +746,7 @@ function closeAllModals() {
     closeSessionModal();
 }
 
-// Updated session starting with room conflict checking
+// CORRECTED: Session starting with proper error handling
 async function handleStartSession(e) {
     e.preventDefault();
     console.log('▶️ Starting new session...');
@@ -812,7 +818,7 @@ async function handleStartSession(e) {
     }
 }
 
-// Handle ending a specific session
+// CORRECTED: Handle ending a specific session with proper URL construction
 async function handleEndSpecificSession(sessionId, sessionName) {
     console.log('⏹️ Ending specific session:', sessionId, sessionName);
     
@@ -827,7 +833,9 @@ async function handleEndSpecificSession(sessionId, sessionName) {
     endBtn.textContent = 'Ending...';
     
     try {
-        const response = await fetch(`${getApiUrl(window.CONFIG.endpoints.faculty.sessions)}/${sessionId}/end`, {
+        // CORRECTED: Using the proper endpoint construction
+        const url = getApiUrl(window.CONFIG.endpoints.faculty.endSession, { id: sessionId });
+        const response = await fetch(url, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${currentFacultyToken}`
@@ -876,7 +884,8 @@ async function handleEndAllSessions() {
     endAllBtn.textContent = 'Ending All...';
     
     try {
-        const response = await fetch(getApiUrl('/api/faculty/sessions/end-all'), {
+        // Using faculty endpoints for end all
+        const response = await fetch(getApiUrl(window.CONFIG.endpoints.faculty.endAllSessions), {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${currentFacultyToken}`
@@ -909,7 +918,6 @@ async function handleEndAllSessions() {
         endAllBtn.textContent = originalText;
     }
 }
-
 
 // Filter functions
 function clearDateFilter() {
@@ -980,12 +988,22 @@ function showSuccessToast(message) {
     }, 4000);
 }
 
+// CORRECTED: Utility function to build API URLs with proper parameter substitution
+function getApiUrl(endpoint, params = {}) {
+    let url = endpoint;
+    
+    // Replace URL parameters like {id} with actual values
+    for (const [key, value] of Object.entries(params)) {
+        url = url.replace(`{${key}}`, value);
+    }
+    
+    return url;
+}
 
 // Global functions (called from HTML)
 window.showTab = showTab;
 window.openSessionModal = openSessionModal;
 window.closeSessionModal = closeSessionModal;
 window.togglePassword = togglePassword;
-
 
 console.log('✅ Faculty dashboard JavaScript initialized with multiple sessions support (max 5 concurrent sessions)');
