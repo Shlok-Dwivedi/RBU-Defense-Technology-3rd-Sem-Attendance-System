@@ -1,17 +1,18 @@
-// config.js - CORRECTED VERSION 2
+// config.js - FINAL CORRECTED VERSION
 const config = {
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3000' // For local testing
         : 'https://rbu-defense-technology-3rd-sem.onrender.com', // Your LIVE backend URL
 
-    // API endpoints (ensure all endpoints start with /api)
+    // API endpoints (ensure ALL endpoints start with /api)
     endpoints: {
         attendance: '/api/attendance',
         sessionStatus: '/api/session-status',
         faculty: {
             login: '/api/faculty/login',
             sessions: '/api/faculty/sessions',
-            activeSession: '/api/faculty/sessions/active',
+            // This is the specific endpoint that is failing:
+            activeSession: '/api/faculty/sessions/active', 
             endSession: '/api/faculty/sessions/:id/end',
             students: '/api/faculty/students',
             rooms: '/api/faculty/rooms',
@@ -27,5 +28,4 @@ function getApiUrl(endpoint) {
 
 // Export for use in other files
 window.CONFIG = config;
-// This line has been fixed (no hyphen)
 window.getApiUrl = getApiUrl;
