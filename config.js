@@ -1,4 +1,4 @@
-// config.js - CORRECTED VERSION
+// config.js - CORRECTED VERSION 2
 const config = {
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3000' // For local testing
@@ -11,7 +11,7 @@ const config = {
         faculty: {
             login: '/api/faculty/login',
             sessions: '/api/faculty/sessions',
-            activeSession: '/api/faculty/sessions/active', // The one that failed
+            activeSession: '/api/faculty/sessions/active',
             endSession: '/api/faculty/sessions/:id/end',
             students: '/api/faculty/students',
             rooms: '/api/faculty/rooms',
@@ -27,4 +27,5 @@ function getApiUrl(endpoint) {
 
 // Export for use in other files
 window.CONFIG = config;
-window.getApi-Url = getApiUrl;
+// This line has been fixed (no hyphen)
+window.getApiUrl = getApiUrl;
