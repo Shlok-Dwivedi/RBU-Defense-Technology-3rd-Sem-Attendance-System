@@ -66,10 +66,10 @@ const ALLOWED_LOCATIONS = [
                     },
                     { 
                         name: 'DT-701',
-                        lat: 21.097555, 
-                        lng: 79.081555, 
-                        elevation: 250,
-                        radius: 10
+                        lat: 21.176837600, 
+                        lng: 79.060730200, 
+                        elevation: 296.30,
+                        radius: 50
                     }
                 ];
 
@@ -791,6 +791,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
