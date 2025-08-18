@@ -144,23 +144,9 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 }
 
 
-
-
-/*function isLocationAllowed(lat, lng, elevation) {
-    for (const location of ALLOWED_LOCATIONS) {
-        const distance = calculateDistance(lat, lng, location.lat, location.lng);
-        
-        // The elevation check has been removed from this 'if' statement
-        if (distance <= LOCATION_RADIUS) {
-            return { allowed: true, location: location.name };
-        }
-    }
-    return { allowed: false, location: null };
-}
-*/
 // server.js
 
-function isLocationAllowed(lat, lng, elevation) {
+/*function isLocationAllowed(lat, lng, elevation) {
     // Loop through each location object in the ALLOWED_LOCATIONS array
     for (const location of ALLOWED_LOCATIONS) {
         
@@ -179,7 +165,7 @@ function isLocationAllowed(lat, lng, elevation) {
     
     // If the loop finishes and no match was found, the student is not in any allowed zone
     return { allowed: false, location: null };
-}
+}/*
 
 // --- ROOT ROUTE ---
 app.get('/', (req, res) => {
@@ -791,6 +777,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
