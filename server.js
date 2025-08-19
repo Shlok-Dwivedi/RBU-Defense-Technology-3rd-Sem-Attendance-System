@@ -52,9 +52,9 @@ const ALLOWED_LOCATIONS = [
                     },
                     { 
                         name: '403 Test',
-                        lat: 21.1796976300, 
-                        lng: 79.060933300, 
-                        elevation: 288.80,
+                        lat:21.176979600, 
+                        lng: 79.060946300 , 
+                        elevation: 289.50,
                         radius: 50
                     },
                     { 
@@ -777,6 +777,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
