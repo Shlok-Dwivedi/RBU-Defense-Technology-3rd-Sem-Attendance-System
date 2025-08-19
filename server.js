@@ -165,13 +165,13 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
     
     // If the loop finishes and no match was found, the student is not in any allowed zone
     return { allowed: false, location: null };
-}/*
+}
 
 // --- ROOT ROUTE ---
 app.get('/', (req, res) => {
     console.log('📄 Serving index.html');
     res.sendFile(path.join(__dirname, 'index.html'));
-});
+});*/
 
 // --- FACULTY LOGIN ENDPOINT ---
 app.post('/api/faculty/login', [
@@ -777,6 +777,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
