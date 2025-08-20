@@ -147,7 +147,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 
 // server.js
 
-/*function isLocationAllowed(lat, lng, elevation) {
+function isLocationAllowed(lat, lng, elevation) {
     // Loop through each location object in the ALLOWED_LOCATIONS array
     for (const location of ALLOWED_LOCATIONS) {
         
@@ -172,7 +172,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 app.get('/', (req, res) => {
     console.log('📄 Serving index.html');
     res.sendFile(path.join(__dirname, 'index.html'));
-});*/
+});
 
 // --- FACULTY LOGIN ENDPOINT ---
 app.post('/api/faculty/login', [
@@ -778,6 +778,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
