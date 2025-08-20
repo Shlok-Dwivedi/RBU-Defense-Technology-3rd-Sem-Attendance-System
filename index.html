@@ -237,7 +237,7 @@
                     elevationDiff = Math.abs((location.elevation || allowedLoc.elevation) - allowedLoc.elevation);
                     
                     const withinRadius = calculatedDistance <= allowedLoc.radius;
-                    const withinElevation = elevationDiff <= 3;
+                    const withinElevation = elevationDiff <= 1;
                     const isValid = withinRadius && withinElevation;
                     
                     const logEntry = {
@@ -509,6 +509,7 @@
 </body>
 
 </html>
+
 
 
 
