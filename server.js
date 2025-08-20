@@ -158,7 +158,7 @@ function isLocationAllowed(lat, lng, elevation) {
         const elevationDiff = Math.abs((elevation || location.elevation) - location.elevation);
         
         // Check if the student is within this specific location's radius and elevation tolerance
-        if (distance <= location.radius && elevationDiff <= 3) { // Using 10m elevation tolerance
+        if (distance <= location.radius && elevationDiff <= 1) { // Using 10m elevation tolerance
             // If they are, immediately return true and the name of the valid location
             return { allowed: true, location: location.name };
         }
@@ -778,6 +778,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
