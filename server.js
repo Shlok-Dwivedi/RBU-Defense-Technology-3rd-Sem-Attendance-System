@@ -94,7 +94,7 @@ app.use(cors({
     origin: [
         'http://localhost:3000', 
         'https://stellular-platypus-675f9e.netlify.app',
-      "https://stellular-platypus-675f9e.netlify.app/faculty",
+      'https://stellular-platypus-675f9e.netlify.app/faculty',
          'https://rbudefmdm.ddns.net/api',// Add this line
       'https://rbu-defense-technology-3rd-sem.onrender.com/'
     ],
@@ -777,6 +777,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
