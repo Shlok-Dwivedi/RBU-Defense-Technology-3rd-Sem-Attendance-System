@@ -2,8 +2,8 @@
 const config = {
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3000' // For local testing
-        /*: 'https://rbu-defense-technology-3rd-sem.onrender.com',*/ // Your LIVE backend URL
-        : 'https://your-netlify-site-name.netlify.app',
+        : 'https://rbu-defense-technology-3rd-sem.onrender.com', // Your LIVE backend URL
+        : 'https://your-netlify-site-name.netlify.app',*/
             
 
     endpoints: {
