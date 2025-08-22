@@ -59,10 +59,10 @@ const ALLOWED_LOCATIONS = [
                     },
                     { 
                         name: 'Mech Building',
-                        lat: 21.094001, 
-                        lng: 79.078001, 
-                        elevation: 240,
-                        radius: 50 
+                        lat: 21.177247400,
+                        lng:  79.060965300,
+                        elevation: 290.20,
+                        radius: 15  
                     },
                     { 
                         name: 'DT-701',
@@ -777,6 +777,7 @@ app.listen(port, async () => {
     console.log('📍 Allowed locations configured for university premises');
 
 });*/
+
 
 
 
